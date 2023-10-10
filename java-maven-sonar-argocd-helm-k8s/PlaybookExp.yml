@@ -1,0 +1,47 @@
+---
+- name: Install Jenkins on EC2
+  hosts: your_ec2_instance
+  become: yes
+  vars:
+    java_package: java-1.8.0-openjdk  # You can change the Java package name if needed
+
+  tasks:
+    - name: Update package cache
+      package:
+        name: "{{ java_package }}"
+        state: present
+
+    - name: Install Java
+      package:
+        name: "{{ java_package }}"
+        state: present
+
+    - name: Add Jenkins repository
+      become: yes
+      apt_repository:
+        repo: deb http://pkg.jenkins-ci.org/debian-stable binary/
+        state: present
+
+    - name: Add Jenkins GPG key
+      apt_key:
+        url: https://pkg.jenkins.io/debian/jenkins.io.key
+        state: present
+
+    - name: Install Jenkins
+      apt:
+        name: jenkins
+        state: present
+
+    - name: Start Jenkins service
+      service:
+        name: jenkins
+        state: started
+        enabled: yes
+
+    - name: Print initial Jenkins admin password
+      shell: cat /var/lib/jenkins/secrets/initialAdminPassword
+      register: jenkins_admin_password
+      ignore_errors: yes
+
+    - debug:
+        var: jenkins_admin_password.stdout
